@@ -1,5 +1,7 @@
 package com.jerry.authoritativeguide.modle;
 
+import com.jerry.authoritativeguide.util.DateUtil;
+
 import java.util.Date;
 import java.util.UUID;
 
@@ -36,6 +38,14 @@ public class Crime {
 
     public Date getDate() {
         return mDate;
+    }
+
+    /**
+     * 获取带格式的日期
+     * @return
+     */
+    public String getDateString() {
+        return DateUtil.getFormatDateString(mDate, "yyyy-MM-dd") + " " +  DateUtil.getWhichDayOfWeek(mDate);
     }
 
     public void setDate(Date date) {

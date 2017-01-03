@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.widget.Button;
@@ -12,7 +13,7 @@ import android.widget.TextView;
 
 import com.jerry.authoritativeguide.R;
 
-public class CheatActivity extends BaseActivity {
+public class CheatActivity extends AppCompatActivity {
 
     public static final String EXTRA_IS_ANSWER_TRUE = "com.jerry.authoritativeguide.extra_is_answer_true";
     public static final String EXTRA_IS_CHEATER = "com.jerry.authoritativeguide.extra_is_cheater";

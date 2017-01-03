@@ -1,5 +1,7 @@
 package com.jerry.authoritativeguide.fragment;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -14,10 +16,11 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 
 import com.jerry.authoritativeguide.R;
+import com.jerry.authoritativeguide.activity.CrimePagerActivity;
 import com.jerry.authoritativeguide.modle.Crime;
-import com.jerry.authoritativeguide.util.DateUtil;
+import com.jerry.authoritativeguide.util.CrimeLab;
 
-import java.util.Date;
+import java.util.UUID;
 
 /**
  * Created by Jerry on 2016/12/30.
@@ -25,17 +28,41 @@ import java.util.Date;
 
 public class CrimeFragment extends Fragment {
 
+    private static final String ARGS_CRIME_ID = "args_crime_id";
+    private static final String ARGS_POSITION = "args_crime_position";
+
     private Crime mCrime;
 
-    private EditText mTitleField;
-    private Button mDateField;
+    private EditText mTitleEditText;
+    private Button mDateButton;
     private CheckBox mSolvedCheckBox;
+
+    /**
+     * 通过陋习id创建一个自己的实例
+     *
+     * @param crimeId
+     * @return
+     */
+    public static Fragment newInstance(UUID crimeId, int position) {
+        // 保存陋习id
+        Bundle args = new Bundle();
+        args.putSerializable(ARGS_CRIME_ID, crimeId);
+        args.putInt(ARGS_POSITION, position);
+
+        // 创建实例
+        CrimeFragment fragment = new CrimeFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mCrime = new Crime();
+        // 这里通过Arguments来获取陋习id，从而脱离的activity的限制
+        UUID crimeId = (UUID) getArguments().getSerializable(ARGS_CRIME_ID);
+        mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+        setResult();
     }
 
     @Nullable
@@ -43,12 +70,13 @@ public class CrimeFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_crime, container, false);
 
-        mTitleField = (EditText) v.findViewById(R.id.et_title);
-        mDateField = (Button) v.findViewById(R.id.btn_date);
+        mTitleEditText = (EditText) v.findViewById(R.id.et_title);
+        mDateButton = (Button) v.findViewById(R.id.btn_date);
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.cb_solved);
 
         // 设置标题
-        mTitleField.addTextChangedListener(new TextWatcher() {
+        mTitleEditText.setText(mCrime.getTitle());
+        mTitleEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -66,12 +94,11 @@ public class CrimeFragment extends Fragment {
         });
 
         // 设置日期
-        Date date = mCrime.getDate();
-        mDateField.setText(DateUtil.getFormatDateString(date, "yyyy-mm-dd") +
-                " " + DateUtil.getWhichDayOfWeek(date));
-        mDateField.setEnabled(false);
+        mDateButton.setText(mCrime.getDateString());
+        mDateButton.setEnabled(false);
 
         // 设置是否解决
+        mSolvedCheckBox.setChecked(mCrime.isSolved());
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -79,6 +106,18 @@ public class CrimeFragment extends Fragment {
             }
         });
 
+
         return v;
     }
+
+
+    /**
+     * 设置返回的数据
+     */
+    private void setResult() {
+        Intent data = new Intent();
+        data.putExtra(CrimePagerActivity.EXTRA_POSITION, getArguments().getInt(ARGS_POSITION, -1));
+        getActivity().setResult(Activity.RESULT_OK, data);
+    }
+
 }
