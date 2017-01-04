@@ -35,11 +35,6 @@ public class CrimeListFragment extends Fragment {
 
     private boolean mSubtitleVisible;
 
-    /**
-     * 需要更新的陋习位置
-     */
-    public static ArrayList<Integer> sUpdatePositions = new ArrayList<>();
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -116,17 +111,7 @@ public class CrimeListFragment extends Fragment {
             mAdapter = new CrimeAdapter(CrimeLab.get(getActivity()).getCrimes());
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            // 如果变更序号的集合是空的，就说明是新建的陋习，那么就要通知改变所有
-            if (sUpdatePositions.isEmpty()) {
-                mAdapter.notifyDataSetChanged();
-            } else {
-                // 根据所涉及的页面进行更新
-                for (Integer position : sUpdatePositions) {
-                    mAdapter.notifyItemChanged(position);
-                }
-                // 更新完毕要清空更新列表
-                sUpdatePositions.clear();
-            }
+            mAdapter.notifyDataSetChanged();
         }
         updateSubtitle();
     }
@@ -182,8 +167,6 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-            int position = getAdapterPosition();
-            sUpdatePositions.add(position);
             Intent intent = CrimePagerActivity.getIntent(getActivity(), mCrime.getId());
             startActivity(intent);
         }

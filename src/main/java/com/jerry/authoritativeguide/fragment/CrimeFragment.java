@@ -8,6 +8,9 @@ import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -15,12 +18,12 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
-import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.activity.DatePickerActivity;
 import com.jerry.authoritativeguide.activity.TimePickerActivity;
 import com.jerry.authoritativeguide.modle.Crime;
 import com.jerry.authoritativeguide.util.CrimeLab;
+import com.jerry.authoritativeguide.util.DeviceUtil;
 
 import java.util.Date;
 import java.util.UUID;
@@ -66,6 +69,8 @@ public class CrimeFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        setHasOptionsMenu(true);
 
         // 这里通过Arguments来获取陋习id，从而脱离的activity的限制
         UUID crimeId = (UUID) getArguments().getSerializable(ARGS_CRIME_ID);
@@ -136,7 +141,7 @@ public class CrimeFragment extends Fragment {
         mSolvedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mSolvedCheckBox.setChecked(isChecked);
+                mCrime.setSolved(isChecked);
             }
         });
 
@@ -164,6 +169,24 @@ public class CrimeFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_delete_crime:
+                CrimeLab.get(getActivity()).delete(mCrime);
+                getActivity().finish();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
     /**
      * 更新日期数据
      */
@@ -179,5 +202,4 @@ public class CrimeFragment extends Fragment {
         Intent data = new Intent();
         getActivity().setResult(Activity.RESULT_OK, data);
     }
-
 }

@@ -10,7 +10,6 @@ import android.support.v7.app.AppCompatActivity;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.fragment.CrimeFragment;
-import com.jerry.authoritativeguide.fragment.CrimeListFragment;
 import com.jerry.authoritativeguide.modle.Crime;
 import com.jerry.authoritativeguide.util.CrimeLab;
 
@@ -62,24 +61,6 @@ public class CrimePagerActivity extends AppCompatActivity {
             @Override
             public int getCount() {
                 return mCrimes.size();
-            }
-        });
-
-        // 监听都执行了哪些Fragment
-        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-
-            }
-
-            @Override
-            public void onPageSelected(int position) {
-                CrimeListFragment.sUpdatePositions.add(position);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-
             }
         });
 

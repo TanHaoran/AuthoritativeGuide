@@ -67,4 +67,12 @@ public class CrimeLab {
     public void add(Crime crime) {
         mCrimes.add(crime);
     }
+
+    /**
+     * 删除一项陋习
+     * @param crime
+     */
+    public void delete(Crime crime) {
+        mCrimes.remove(crime);
+    }
 }
