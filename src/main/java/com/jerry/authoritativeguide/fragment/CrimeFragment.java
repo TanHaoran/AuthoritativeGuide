@@ -15,11 +15,14 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 
+import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.R;
-import com.jerry.authoritativeguide.activity.CrimePagerActivity;
+import com.jerry.authoritativeguide.activity.DatePickerActivity;
+import com.jerry.authoritativeguide.activity.TimePickerActivity;
 import com.jerry.authoritativeguide.modle.Crime;
 import com.jerry.authoritativeguide.util.CrimeLab;
 
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -31,10 +34,15 @@ public class CrimeFragment extends Fragment {
     private static final String ARGS_CRIME_ID = "args_crime_id";
     private static final String ARGS_POSITION = "args_crime_position";
 
+    private static final String DIALOG_DATE = "dialog_date";
+
+    private static final int REQUEST_DATE = 1;
+
     private Crime mCrime;
 
     private EditText mTitleEditText;
     private Button mDateButton;
+    private Button mTimeButton;
     private CheckBox mSolvedCheckBox;
 
     /**
@@ -72,6 +80,7 @@ public class CrimeFragment extends Fragment {
 
         mTitleEditText = (EditText) v.findViewById(R.id.et_title);
         mDateButton = (Button) v.findViewById(R.id.btn_date);
+        mTimeButton = (Button) v.findViewById(R.id.btn_time);
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.cb_solved);
 
         // 设置标题
@@ -94,8 +103,33 @@ public class CrimeFragment extends Fragment {
         });
 
         // 设置日期
-        mDateButton.setText(mCrime.getDateString());
-        mDateButton.setEnabled(false);
+        updateDate();
+        mDateButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!DeviceUtil.isPad(getActivity())) {
+                    DatePickerFragment datePickerFragment = DatePickerFragment.newInstance(mCrime.getDate());
+                    datePickerFragment.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
+                    datePickerFragment.show(getFragmentManager(), DIALOG_DATE);
+                } else {
+                    Intent intent = DatePickerActivity.newIntent(getActivity(), mCrime.getDate());
+                    startActivityForResult(intent, REQUEST_DATE);
+                }
+            }
+        });
+        mTimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!DeviceUtil.isPad(getActivity())) {
+                    TimePickerFragment timePickerFragment = TimePickerFragment.newInstance(mCrime.getDate());
+                    timePickerFragment.setTargetFragment(CrimeFragment.this, REQUEST_DATE);
+                    timePickerFragment.show(getFragmentManager(), DIALOG_DATE);
+                } else {
+                    Intent intent = TimePickerActivity.newIntent(getActivity(), mCrime.getDate());
+                    startActivityForResult(intent, REQUEST_DATE);
+                }
+            }
+        });
 
         // 设置是否解决
         mSolvedCheckBox.setChecked(mCrime.isSolved());
@@ -110,13 +144,39 @@ public class CrimeFragment extends Fragment {
         return v;
     }
 
+    /**
+     * 接受从DatePickerFragment传过来的日期数据
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == REQUEST_DATE) {
+
+                Date date = (Date) data.getSerializableExtra(DatePickerFragment.EXTRA_DATE);
+                // 更新日期数据
+                mCrime.setDate(date);
+                updateDate();
+            }
+        }
+    }
+
+    /**
+     * 更新日期数据
+     */
+    private void updateDate() {
+        mDateButton.setText(mCrime.getDateString());
+        mTimeButton.setText(mCrime.getTimeString());
+    }
 
     /**
      * 设置返回的数据
      */
     private void setResult() {
         Intent data = new Intent();
-        data.putExtra(CrimePagerActivity.EXTRA_POSITION, getArguments().getInt(ARGS_POSITION, -1));
         getActivity().setResult(Activity.RESULT_OK, data);
     }
 

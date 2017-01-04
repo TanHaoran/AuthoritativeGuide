@@ -21,7 +21,12 @@
         </activity>
         <activity android:name=".activity.CrimeListActivity">
         </activity>
-        <activity android:name=".activity.CrimePagerActivity">
+        <activity android:name=".activity.CrimePagerActivity"
+            android:parentActivityName=".activity.CrimeListActivity">
+        </activity>
+        <activity android:name=".activity.DatePickerActivity">
+        </activity>
+        <activity android:name=".activity.TimePickerActivity">
         </activity>
     </application>
 

@@ -1,13 +1,16 @@
 package com.jerry.authoritativeguide.fragment;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
@@ -25,20 +28,30 @@ import java.util.ArrayList;
  */
 public class CrimeListFragment extends Fragment {
 
-    private static final int REQUEST_CRIME = 1;
+    private static final String EXTRA_SUBTITLE = "extra_subtitle";
 
     private RecyclerView mRecyclerView;
     private CrimeAdapter mAdapter;
 
+    private boolean mSubtitleVisible;
+
     /**
      * 需要更新的陋习位置
      */
-    private int mUpdatePosition = -1;
+    public static ArrayList<Integer> sUpdatePositions = new ArrayList<>();
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        if (savedInstanceState != null) {
+            mSubtitleVisible = savedInstanceState.getBoolean(EXTRA_SUBTITLE);
+        }
+
         View v = inflater.inflate(R.layout.fragment_crime_list, container, false);
+
+        // 通知Fragment有菜单选择项
+        setHasOptionsMenu(true);
 
         mRecyclerView = (RecyclerView) v.findViewById(R.id.rv_crime);
         // 如果不设置布局管理器，就会报错无法运行
@@ -56,12 +69,42 @@ public class CrimeListFragment extends Fragment {
     }
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CRIME && resultCode == Activity.RESULT_OK) {
-            if (data != null) {
-                mUpdatePosition = data.getIntExtra(CrimePagerActivity.EXTRA_POSITION, 0);
-            }
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_show_subtitle);
+        if (mSubtitleVisible) {
+            item.setTitle(R.string.hide_subtitle);
+        } else {
+            item.setTitle(R.string.show_subtitle);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_new_crime:
+                Crime crime = new Crime();
+                CrimeLab.get(getActivity()).add(crime);
+
+                Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
+                startActivity(intent);
+                return true;
+            case R.id.menu_item_show_subtitle:
+                mSubtitleVisible = !mSubtitleVisible;
+                getActivity().invalidateOptionsMenu();
+                updateSubtitle();
+                return true;
+            default:
+               return  super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(EXTRA_SUBTITLE, mSubtitleVisible);
     }
 
     /**
@@ -73,9 +116,32 @@ public class CrimeListFragment extends Fragment {
             mAdapter = new CrimeAdapter(CrimeLab.get(getActivity()).getCrimes());
             mRecyclerView.setAdapter(mAdapter);
         } else {
-            // 只更新需要更新的那一个数据
-            mAdapter.notifyItemChanged(mUpdatePosition);
+            // 如果变更序号的集合是空的，就说明是新建的陋习，那么就要通知改变所有
+            if (sUpdatePositions.isEmpty()) {
+                mAdapter.notifyDataSetChanged();
+            } else {
+                // 根据所涉及的页面进行更新
+                for (Integer position : sUpdatePositions) {
+                    mAdapter.notifyItemChanged(position);
+                }
+                // 更新完毕要清空更新列表
+                sUpdatePositions.clear();
+            }
         }
+        updateSubtitle();
+    }
+
+    /**
+     * 更新工具栏的副标题
+     */
+    private void updateSubtitle() {
+        int size = CrimeLab.get(getActivity()).getCrimes().size();
+        String subtitle = getString(R.string.subtitle_format, new Integer(size));
+        AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
+        if (!mSubtitleVisible) {
+            subtitle = null;
+        }
+        appCompatActivity.getSupportActionBar().setSubtitle(subtitle);
     }
 
     /**
@@ -117,8 +183,9 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View v) {
             int position = getAdapterPosition();
-            Intent intent = CrimePagerActivity.getIntent(getActivity(), mCrime.getId(), position);
-            startActivityForResult(intent, REQUEST_CRIME);
+            sUpdatePositions.add(position);
+            Intent intent = CrimePagerActivity.getIntent(getActivity(), mCrime.getId());
+            startActivity(intent);
         }
     }
 

@@ -41,11 +41,19 @@ public class Crime {
     }
 
     /**
-     * 获取带格式的日期
+     * 获取带格式的日期：yyyy-MM-dd
      * @return
      */
     public String getDateString() {
         return DateUtil.getFormatDateString(mDate, "yyyy-MM-dd") + " " +  DateUtil.getWhichDayOfWeek(mDate);
+    }
+
+    /**
+     * 获取带格式的日期：HH:mm
+     * @return
+     */
+    public String getTimeString() {
+        return DateUtil.getFormatDateString(mDate, "HH:mm");
     }
 
     public void setDate(Date date) {
