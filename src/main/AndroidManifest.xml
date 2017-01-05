@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.jerry.authoritativeguide">
 
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -19,9 +21,12 @@
         </activity>
         <activity android:name=".activity.CheatActivity">
         </activity>
-        <activity android:name=".activity.CrimeListActivity">
+        <activity
+            android:name=".activity.CrimeListActivity"
+            android:launchMode="singleTop">
         </activity>
-        <activity android:name=".activity.CrimePagerActivity"
+        <activity
+            android:name=".activity.CrimePagerActivity"
             android:parentActivityName=".activity.CrimeListActivity">
         </activity>
         <activity android:name=".activity.DatePickerActivity">
