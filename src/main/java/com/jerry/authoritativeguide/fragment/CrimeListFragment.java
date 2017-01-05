@@ -13,6 +13,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
@@ -33,6 +34,9 @@ public class CrimeListFragment extends Fragment {
     private RecyclerView mRecyclerView;
     private CrimeAdapter mAdapter;
 
+    private TextView mEmptyMsgTextView;
+    private Button mAddOneButton;
+
     private boolean mSubtitleVisible;
 
     @Nullable
@@ -49,8 +53,22 @@ public class CrimeListFragment extends Fragment {
         setHasOptionsMenu(true);
 
         mRecyclerView = (RecyclerView) v.findViewById(R.id.rv_crime);
+        mEmptyMsgTextView = (TextView) v.findViewById(R.id.tv_empty_msg);
+        mAddOneButton = (Button) v.findViewById(R.id.btn_add_one_immediately);
+
+
+
+
         // 如果不设置布局管理器，就会报错无法运行
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        // 添加按钮响应事件
+        mAddOneButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                newCrime();
+            }
+        });
 
         updateUI();
 
@@ -60,6 +78,7 @@ public class CrimeListFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        // 更新UI
         updateUI();
     }
 
@@ -80,11 +99,7 @@ public class CrimeListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_new_crime:
-                Crime crime = new Crime();
-                CrimeLab.get(getActivity()).add(crime);
-
-                Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
-                startActivity(intent);
+                newCrime();
                 return true;
             case R.id.menu_item_show_subtitle:
                 mSubtitleVisible = !mSubtitleVisible;
@@ -92,7 +107,7 @@ public class CrimeListFragment extends Fragment {
                 updateSubtitle();
                 return true;
             default:
-               return  super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(item);
         }
     }
 
@@ -106,12 +121,23 @@ public class CrimeListFragment extends Fragment {
      * 更新界面UI
      */
     private void updateUI() {
+        ArrayList<Crime> crimes = CrimeLab.get(getActivity()).getCrimes();
+
         // 如果是第一次应该创建适配器，其它他情况应该更新界面
         if (mAdapter == null) {
-            mAdapter = new CrimeAdapter(CrimeLab.get(getActivity()).getCrimes());
+            mAdapter = new CrimeAdapter(crimes);
             mRecyclerView.setAdapter(mAdapter);
         } else {
+            mAdapter.setCrimes(crimes);
             mAdapter.notifyDataSetChanged();
+        }
+
+        if (CrimeLab.get(getActivity()).getCrimes().isEmpty()) {
+            mEmptyMsgTextView.setVisibility(View.VISIBLE);
+            mAddOneButton.setVisibility(View.VISIBLE);
+        } else {
+            mEmptyMsgTextView.setVisibility(View.INVISIBLE);
+            mAddOneButton.setVisibility(View.INVISIBLE);
         }
         updateSubtitle();
     }
@@ -121,12 +147,26 @@ public class CrimeListFragment extends Fragment {
      */
     private void updateSubtitle() {
         int size = CrimeLab.get(getActivity()).getCrimes().size();
-        String subtitle = getString(R.string.subtitle_format, new Integer(size));
+        String subtitle = getResources().getQuantityString(R.plurals.subtitle_plural,
+                new Integer(size), new Integer(size));
         AppCompatActivity appCompatActivity = (AppCompatActivity) getActivity();
         if (!mSubtitleVisible) {
             subtitle = null;
         }
         appCompatActivity.getSupportActionBar().setSubtitle(subtitle);
+    }
+
+
+
+    /**
+     * 添加一个新陋习
+     */
+    private void newCrime() {
+        Crime crime = new Crime();
+        CrimeLab.get(getActivity()).add(crime);
+
+        Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
+        startActivity(intent);
     }
 
     /**
@@ -212,6 +252,10 @@ public class CrimeListFragment extends Fragment {
         @Override
         public int getItemCount() {
             return mCrimes.size();
+        }
+
+        public void setCrimes(ArrayList<Crime> crimes) {
+            mCrimes = crimes;
         }
     }
 }
