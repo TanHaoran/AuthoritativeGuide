@@ -12,7 +12,7 @@ import android.widget.Toast;
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.modle.Question;
 
-public class QuizActivity extends AppCompatActivity {
+public class QuizActivity extends BaseActivity {
 
     private static final String TAG = "QuizActivity";
 

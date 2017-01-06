@@ -1,5 +1,6 @@
 package com.jerry.authoritativeguide.fragment;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,13 +24,16 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 
 import com.jerry.authoritativeguide.R;
+import com.jerry.authoritativeguide.activity.BaseActivity;
 import com.jerry.authoritativeguide.activity.DatePickerActivity;
 import com.jerry.authoritativeguide.activity.TimePickerActivity;
 import com.jerry.authoritativeguide.modle.Crime;
+import com.jerry.authoritativeguide.permission.PermissionListener;
 import com.jerry.authoritativeguide.util.CrimeLab;
 import com.jerry.authoritativeguide.util.DeviceUtil;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -45,6 +49,7 @@ public class CrimeFragment extends Fragment {
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
+    private static final String TAG = "CrimeFragment";
 
     private Crime mCrime;
 
@@ -169,20 +174,48 @@ public class CrimeFragment extends Fragment {
         mSuspectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(intent, REQUEST_CONTACT);
+                BaseActivity activity = (BaseActivity) getActivity();
+                activity.requestRuntimePermission(new String[]{Manifest.permission.READ_CONTACTS},
+                        new PermissionListener() {
+                            @Override
+                            public void onGranted() {
+                                startActivityForResult(intent, REQUEST_CONTACT);
+                            }
+
+                            @Override
+                            public void onDenied(List<String> deniedPermissions) {
+
+                            }
+                        });
             }
         });
 
         // 打嫌疑人电话
         if (mCrime.getSuspectPhone() != null) {
+            mCallSuspectButton.setText(mCrime.getSuspectPhone());
             mCallSuspectButton.setEnabled(true);
+        } else {
+            mCallSuspectButton.setText(R.string.crime_call_suspect);
+            mCallSuspectButton.setEnabled(false);
         }
         mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_CALL);
-                intent.setData(Uri.parse("tel:1234567890"));
-                startActivity(intent);
+                BaseActivity activity = (BaseActivity) getActivity();
+                activity.requestRuntimePermission(new String[]{Manifest.permission.CALL_PHONE},
+                        new PermissionListener() {
+                            @Override
+                            public void onGranted() {
+                                Intent intent = new Intent(Intent.ACTION_DIAL);
+                                intent.setData(Uri.parse("tel:" + mCrime.getSuspectPhone()));
+                                startActivity(intent);
+                            }
+
+                            @Override
+                            public void onDenied(List<String> deniedPermissions) {
+
+                            }
+                        });
             }
         });
 
@@ -195,12 +228,6 @@ public class CrimeFragment extends Fragment {
                 intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
                 intent = Intent.createChooser(intent, getString(R.string.send_report));
                 startActivity(intent);
-//                ShareCompat.IntentBuilder intentBuilder = ShareCompat.IntentBuilder.from(getActivity());
-//                Intent intent = intentBuilder
-//                        .setText(getCrimeReport())
-//                        .setSubject(getString(R.string.crime_report_subject))
-//                        .getIntent();
-//                startActivity(intent);
             }
         });
 
@@ -229,23 +256,25 @@ public class CrimeFragment extends Fragment {
             Uri contactUri = data.getData();
 
             // 获取联系人姓名
-            String[] cols = new String[]{ContactsContract.Contacts.DISPLAY_NAME};
-            Cursor nameCursor = getActivity().getContentResolver().query(contactUri, cols, null, null, null);
-            try {
-                if (nameCursor.getCount() != 0) {
-                    nameCursor.moveToFirst();
-                    // 获取联系人姓名
-                    String suspectName = nameCursor.getString(0);
-                    mCrime.setSuspect(suspectName);
-                    mSuspectButton.setText(suspectName);
-                }
-            } finally {
-                nameCursor.close();
+            String suspect = getContactName(contactUri);
+            if (suspect != null) {
+                mCrime.setSuspect(suspect);
+                mSuspectButton.setText(suspect);
             }
 
             // 获取联系人手机号
+            String phone = getContactPhone(contactUri);
+            mCrime.setSuspectPhone(phone);
+            if (phone != null) {
+                mCallSuspectButton.setEnabled(true);
+                mCallSuspectButton.setText(phone);
+            } else {
+                mCallSuspectButton.setEnabled(false);
+                mCallSuspectButton.setText(R.string.crime_call_suspect);
+            }
         }
     }
+
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
@@ -311,5 +340,62 @@ public class CrimeFragment extends Fragment {
 
         return getString(R.string.crime_report, mCrime.getTitle(), mCrime.getDateString(),
                 suspect, solved);
+    }
+
+
+    /**
+     * 获取联系人姓名
+     *
+     * @param contactUri
+     * @return
+     */
+    private String getContactName(Uri contactUri) {
+        String name = null;
+        String[] cols = new String[]{ContactsContract.Contacts.DISPLAY_NAME};
+        Cursor nameCursor = getActivity().getContentResolver().query(contactUri, cols, null, null, null);
+        try {
+            if (nameCursor.getCount() > 0) {
+                nameCursor.moveToFirst();
+                // 获取联系人姓名
+                name = nameCursor.getString(0);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            nameCursor.close();
+            return name;
+        }
+    }
+
+    /**
+     * 获取联系人手机号
+     *
+     * @param contactUri
+     * @return
+     */
+    private String getContactPhone(Uri contactUri) {
+        String phone = null;
+        Cursor cursor = getActivity().getContentResolver().query(contactUri, null, null, null, null);
+        try {
+            if (cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                String id = cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));
+                int hasPhoneNumber = cursor.getInt(cursor.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER));
+                // 说明有电话号码
+                if (hasPhoneNumber > 0) {
+                    Cursor phoneCursor = getActivity().getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            null, ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=?", new String[]{id}, null);
+                    if (phoneCursor.getCount() > 0) {
+                        phoneCursor.moveToFirst();
+                        phone = phoneCursor.getString(phoneCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            cursor.close();
+            return phone;
+        }
     }
 }

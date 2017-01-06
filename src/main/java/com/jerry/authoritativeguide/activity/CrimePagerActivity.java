@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.fragment.CrimeFragment;
@@ -16,7 +15,7 @@ import com.jerry.authoritativeguide.util.CrimeLab;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class CrimePagerActivity extends AppCompatActivity {
+public class CrimePagerActivity extends BaseActivity {
 
     private static final String TAG = "CrimePagerActivity";
 
