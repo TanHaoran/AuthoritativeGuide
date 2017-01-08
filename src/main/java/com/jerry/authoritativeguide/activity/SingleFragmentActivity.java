@@ -3,7 +3,6 @@ package com.jerry.authoritativeguide.activity;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AppCompatActivity;
 
 import com.jerry.authoritativeguide.R;
 
@@ -11,7 +10,7 @@ import com.jerry.authoritativeguide.R;
  * Created by Jerry on 2017/1/3.
  */
 
-public abstract class SingleFragmentActivity extends AppCompatActivity {
+public abstract class SingleFragmentActivity extends BaseActivity {
 
     protected abstract Fragment createFragment();
 
