@@ -4,12 +4,14 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Environment;
 
 import com.jerry.authoritativeguide.database.CrimeBaseHelper;
 import com.jerry.authoritativeguide.database.CrimeCursorWrapper;
 import com.jerry.authoritativeguide.database.CrimeDbSchema;
 import com.jerry.authoritativeguide.modle.Crime;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -153,4 +155,22 @@ public class CrimeLab {
         contentValues.put(CrimeDbSchema.CrimeTable.Cols.SUSPECT_PHONE, crime.getSuspectPhone());
         return contentValues;
     }
+
+    /**
+     * 获取陋习照片文件
+     * @param crime
+     * @return
+     */
+    public File getPhotoFile(Crime crime) {
+        File externalFilesDir =  mContext.getExternalFilesDir(Environment
+                .DIRECTORY_PICTURES);
+        if (externalFilesDir == null) {
+            return null;
+        }
+
+        return new File(externalFilesDir, crime.getPhotoFileName());
+    }
 }
+
+
+

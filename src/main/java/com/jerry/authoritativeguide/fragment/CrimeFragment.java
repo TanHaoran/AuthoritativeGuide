@@ -2,12 +2,15 @@ package com.jerry.authoritativeguide.fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
@@ -22,6 +25,8 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.activity.BaseActivity;
@@ -31,7 +36,9 @@ import com.jerry.authoritativeguide.modle.Crime;
 import com.jerry.authoritativeguide.permission.PermissionListener;
 import com.jerry.authoritativeguide.util.CrimeLab;
 import com.jerry.authoritativeguide.util.DeviceUtil;
+import com.jerry.authoritativeguide.util.PictureUtil;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -42,6 +49,8 @@ import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
 
+    private static final String TAG = "CrimeFragment";
+
     private static final String ARGS_CRIME_ID = "args_crime_id";
     private static final String ARGS_POSITION = "args_crime_position";
 
@@ -49,9 +58,12 @@ public class CrimeFragment extends Fragment {
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
-    private static final String TAG = "CrimeFragment";
+    private static final int REQUEST_CAMERA = 2;
+
 
     private Crime mCrime;
+
+    private File mPhotoFile;
 
     private EditText mTitleEditText;
     private Button mDateButton;
@@ -61,6 +73,9 @@ public class CrimeFragment extends Fragment {
     private Button mSuspectButton;
     private Button mCallSuspectButton;
     private Button mReportButton;
+
+    private ImageView mPhotoImageView;
+    private ImageButton mCameraButton;
 
     /**
      * 通过陋习id创建一个自己的实例
@@ -89,6 +104,7 @@ public class CrimeFragment extends Fragment {
         // 这里通过Arguments来获取陋习id，从而脱离的activity的限制
         UUID crimeId = (UUID) getArguments().getSerializable(ARGS_CRIME_ID);
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+        mPhotoFile = CrimeLab.get(getActivity()).getPhotoFile(mCrime);
         setResult();
     }
 
@@ -101,9 +117,13 @@ public class CrimeFragment extends Fragment {
         mDateButton = (Button) v.findViewById(R.id.btn_date);
         mTimeButton = (Button) v.findViewById(R.id.btn_time);
         mSolvedCheckBox = (CheckBox) v.findViewById(R.id.cb_solved);
+
         mSuspectButton = (Button) v.findViewById(R.id.btn_suspect);
         mCallSuspectButton = (Button) v.findViewById(R.id.btn_call_suspect);
         mReportButton = (Button) v.findViewById(R.id.btn_report);
+
+        mPhotoImageView = (ImageView) v.findViewById(R.id.iv_photo);
+        mCameraButton = (ImageButton) v.findViewById(R.id.ib_camera);
 
         // 设置标题
         mTitleEditText.setText(mCrime.getTitle());
@@ -166,9 +186,9 @@ public class CrimeFragment extends Fragment {
         if (mCrime.getSuspect() != null) {
             mSuspectButton.setText(mCrime.getSuspect());
         }
-        final Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+        final Intent contactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
         PackageManager packageManager = getActivity().getPackageManager();
-        if (packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) == null) {
+        if (packageManager.resolveActivity(contactIntent, PackageManager.MATCH_DEFAULT_ONLY) == null) {
             mSuspectButton.setEnabled(false);
         }
         mSuspectButton.setOnClickListener(new View.OnClickListener() {
@@ -179,7 +199,7 @@ public class CrimeFragment extends Fragment {
                         new PermissionListener() {
                             @Override
                             public void onGranted() {
-                                startActivityForResult(intent, REQUEST_CONTACT);
+                                startActivityForResult(contactIntent, REQUEST_CONTACT);
                             }
 
                             @Override
@@ -201,8 +221,7 @@ public class CrimeFragment extends Fragment {
         mCallSuspectButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                BaseActivity activity = (BaseActivity) getActivity();
-                activity.requestRuntimePermission(new String[]{Manifest.permission.CALL_PHONE},
+                BaseActivity.requestRuntimePermission(new String[]{Manifest.permission.CALL_PHONE},
                         new PermissionListener() {
                             @Override
                             public void onGranted() {
@@ -228,6 +247,40 @@ public class CrimeFragment extends Fragment {
                 intent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.crime_report_subject));
                 intent = Intent.createChooser(intent, getString(R.string.send_report));
                 startActivity(intent);
+            }
+        });
+
+        // 设置图片
+        updatePhotoView();
+
+        // 设置拍照按钮
+        final Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // 检测照片文件不为空，并且有响应的照相启动
+        boolean canTakePhoto = mPhotoFile != null && cameraIntent.resolveActivity
+                (packageManager) != null;
+        mCameraButton.setEnabled(canTakePhoto);
+        mCameraButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                BaseActivity.requestRuntimePermission(new String[]{Manifest
+                        .permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}, new
+                        PermissionListener() {
+                            @Override
+                            public void onGranted() {
+                                ContentValues contentValues = new ContentValues(1);
+                                contentValues.put(MediaStore.Images.Media.DATA, mPhotoFile.getAbsolutePath());
+                                Uri uri = getActivity().getContentResolver().insert(MediaStore.Images
+                                        .Media.EXTERNAL_CONTENT_URI, contentValues);
+
+                                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+                                startActivityForResult(cameraIntent, REQUEST_CAMERA);
+                            }
+
+                            @Override
+                            public void onDenied(List<String> deniedPermissions) {
+
+                            }
+                        });
             }
         });
 
@@ -272,6 +325,8 @@ public class CrimeFragment extends Fragment {
                 mCallSuspectButton.setEnabled(false);
                 mCallSuspectButton.setText(R.string.crime_call_suspect);
             }
+        } else if (requestCode == REQUEST_CAMERA) {
+            updatePhotoView();
         }
     }
 
@@ -396,6 +451,19 @@ public class CrimeFragment extends Fragment {
         } finally {
             cursor.close();
             return phone;
+        }
+    }
+
+    /**
+     * 更新相片
+     */
+    private void updatePhotoView() {
+        if (mPhotoFile != null && mPhotoFile.exists()) {
+            Bitmap bitmap = PictureUtil.getScaleBitmap(mPhotoFile
+                    .getPath(), getActivity());
+            mPhotoImageView.setImageBitmap(bitmap);
+        } else {
+            mPhotoImageView.setImageBitmap(null);
         }
     }
 }

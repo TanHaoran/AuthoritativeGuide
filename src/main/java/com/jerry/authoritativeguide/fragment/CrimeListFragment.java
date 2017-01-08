@@ -56,9 +56,6 @@ public class CrimeListFragment extends Fragment {
         mEmptyMsgTextView = (TextView) v.findViewById(R.id.tv_empty_msg);
         mAddOneButton = (Button) v.findViewById(R.id.btn_add_one_immediately);
 
-
-
-
         // 如果不设置布局管理器，就会报错无法运行
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
