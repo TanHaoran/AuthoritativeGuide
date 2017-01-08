@@ -233,7 +233,7 @@ public class CrimeListFragment extends Fragment {
         @Override
         public CrimeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(getActivity());
-            View v = inflater.inflate(R.layout.list_item_crime, parent, false);
+            View v = inflater.inflate(R.layout.item_list_crime, parent, false);
             return new CrimeHolder(v);
         }
 
