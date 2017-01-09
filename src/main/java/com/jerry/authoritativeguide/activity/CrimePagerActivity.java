@@ -15,7 +15,7 @@ import com.jerry.authoritativeguide.util.CrimeLab;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class CrimePagerActivity extends BaseActivity {
+public class CrimePagerActivity extends BaseActivity implements CrimeFragment.CallBack {
 
     private static final String TAG = "CrimePagerActivity";
 
@@ -54,7 +54,7 @@ public class CrimePagerActivity extends BaseActivity {
             @Override
             public Fragment getItem(int position) {
                 Crime crime = mCrimes.get(position);
-                return CrimeFragment.newInstance(crime.getId(), position);
+                return CrimeFragment.newInstance(crime.getId());
             }
 
             @Override
@@ -82,5 +82,9 @@ public class CrimePagerActivity extends BaseActivity {
                 break;
             }
         }
+    }
+
+    @Override
+    public void onCrimeUpdate(Crime crime) {
     }
 }
