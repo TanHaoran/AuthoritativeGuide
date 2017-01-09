@@ -94,4 +94,12 @@ public class Crime {
     public void setSuspectPhone(String suspectPhone) {
         mSuspectPhone = suspectPhone;
     }
+
+    /**
+     * 获取陋习照片名称
+     * @return
+     */
+    public String getPhotoFileName() {
+        return "IMG_" + getId().toString() + ".jpg";
+    }
 }

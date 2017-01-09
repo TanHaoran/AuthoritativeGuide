@@ -56,9 +56,6 @@ public class CrimeListFragment extends Fragment {
         mEmptyMsgTextView = (TextView) v.findViewById(R.id.tv_empty_msg);
         mAddOneButton = (Button) v.findViewById(R.id.btn_add_one_immediately);
 
-
-
-
         // 如果不设置布局管理器，就会报错无法运行
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
@@ -233,7 +230,7 @@ public class CrimeListFragment extends Fragment {
         @Override
         public CrimeHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             LayoutInflater inflater = LayoutInflater.from(getActivity());
-            View v = inflater.inflate(R.layout.list_item_crime, parent, false);
+            View v = inflater.inflate(R.layout.item_list_crime, parent, false);
             return new CrimeHolder(v);
         }
 
