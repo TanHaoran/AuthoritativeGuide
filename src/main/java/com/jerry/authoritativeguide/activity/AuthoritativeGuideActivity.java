@@ -13,7 +13,7 @@ public class AuthoritativeGuideActivity extends BaseActivity {
 
     private ListView mListView;
 
-    private String[] mTitles = {"GeoQuiz", "CrimeIntent", "BeatBox"};
+    private String[] mTitles = {"GeoQuiz", "CrimeIntent", "BeatBox", "NerdLauncher"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,8 +34,13 @@ public class AuthoritativeGuideActivity extends BaseActivity {
                         break;
                     case 1:
                         intent.setClass(AuthoritativeGuideActivity.this, CrimeListActivity.class);
+                        break;
                     case 2:
                         intent.setClass(AuthoritativeGuideActivity.this, BeatBoxActivity.class);
+                        break;
+                    case 3:
+                        intent.setClass(AuthoritativeGuideActivity.this, NerdLauncherActivity.class);
+                        break;
                     default:
                         break;
                 }

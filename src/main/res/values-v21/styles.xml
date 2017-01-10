@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <!-- Base application theme. -->
@@ -9,7 +10,9 @@
     </style>
 
     <style name="BeatBoxButton" parent="android:style/Widget.Holo.Button">
-        <item name="android:background">@color/dark_blue</item>
+        <item name="android:background">@drawable/button_beat_box</item>
     </style>
+
+    <style name="BeatBoxButtonMaterial" parent="android:style/Widget.Material.Button"></style>
 
 </resources>
