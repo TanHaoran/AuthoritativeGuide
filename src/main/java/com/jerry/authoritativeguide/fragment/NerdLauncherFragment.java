@@ -26,7 +26,6 @@ import java.util.List;
  */
 public class NerdLauncherFragment extends Fragment {
 
-
     private RecyclerView mRecyclerView;
 
     public static NerdLauncherFragment newInstance() {
@@ -42,7 +41,7 @@ public class NerdLauncherFragment extends Fragment {
         mRecyclerView = (RecyclerView) v.findViewById(R.id.rv_nerd_launcher);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
-        setUpAdapter();
+        setupAdapter();
 
         return v;
     }
@@ -50,7 +49,7 @@ public class NerdLauncherFragment extends Fragment {
     /**
      * 设置RecyclerView的适配器
      */
-    private void setUpAdapter() {
+    private void setupAdapter() {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
