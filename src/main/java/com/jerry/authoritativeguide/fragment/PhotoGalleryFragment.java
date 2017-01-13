@@ -1,5 +1,7 @@
 package com.jerry.authoritativeguide.fragment;
 
+import android.graphics.Point;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,12 +12,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.modle.GalleryItem;
+import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.util.FlickrFetchr;
+import com.jerry.authoritativeguide.util.ThumbnailDownloader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +43,10 @@ public class PhotoGalleryFragment extends Fragment {
 
     private boolean mIsLoading = false;
 
+    private boolean mFinishLayout = false;
+
+    private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
+
     public static PhotoGalleryFragment newInstance() {
 
         return new PhotoGalleryFragment();
@@ -48,6 +57,11 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
+
+        mThumbnailDownloader = new ThumbnailDownloader<>();
+        mThumbnailDownloader.start();
+        mThumbnailDownloader.getLooper();
+        Log.i(TAG, "ThumbnailDownloader has started!");
     }
 
     @Nullable
@@ -57,7 +71,6 @@ public class PhotoGalleryFragment extends Fragment {
 
         mRecyclerView = (RecyclerView) v.findViewById(R.id.rv_photo_gallery);
         mProgressBar = (ProgressBar) v.findViewById(R.id.pb_photo_gallery);
-        mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
 
@@ -76,9 +89,29 @@ public class PhotoGalleryFragment extends Fragment {
             }
 
         });
+        mRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                if (!mFinishLayout) {
+                    mFinishLayout = true;
+                    Log.i(TAG, "全局更新");
+                    Point point = DeviceUtil.getDevicePoint(getActivity());
+                    int columns = point.x / 300;
+                    mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), columns));
+                }
+            }
+        });
+
         // 开始读取照片
         loadGalleryItems();
         return v;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mThumbnailDownloader.quit();
+        Log.i(TAG, "ThumbnailDownloader has quit!");
     }
 
     /**
@@ -108,15 +141,15 @@ public class PhotoGalleryFragment extends Fragment {
 
     private class PhotoHolder extends RecyclerView.ViewHolder {
 
-        private TextView mTitleTextView;
+        private ImageView mGalleryImageView;
 
         public PhotoHolder(View itemView) {
             super(itemView);
-            mTitleTextView = (TextView) itemView;
+            mGalleryImageView = (ImageView) itemView;
         }
 
-        public void bindGalleryItem(GalleryItem item) {
-            mTitleTextView.setText(item.getTitle());
+        public void bindGalleryItem(Drawable drawable) {
+            mGalleryImageView.setImageDrawable(drawable);
         }
     }
 
@@ -130,13 +163,23 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public PhotoHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            TextView textView = new TextView(getActivity());
-            return new PhotoHolder(textView);
+            View v = LayoutInflater.from(getActivity()).inflate(R.layout.item_gallery, parent, false);
+            ImageView imageView = (ImageView) v.findViewById(R.id.iv_gallery);
+            return new PhotoHolder(imageView);
         }
 
         @Override
         public void onBindViewHolder(PhotoHolder holder, int position) {
-            holder.bindGalleryItem(mGalleryItems.get(position));
+            GalleryItem item = mGalleryItems.get(position);
+            Drawable placeholder;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                placeholder = getResources().getDrawable(R.drawable.bill_up_close, null);
+            } else {
+                placeholder = getResources().getDrawable(R.drawable.bill_up_close);
+            }
+            holder.bindGalleryItem(placeholder);
+            mThumbnailDownloader.queueThumbnail(holder, item.getUrl_s());
+            Log.i(TAG, "Got a new url : " + item.getUrl_s());
         }
 
         @Override

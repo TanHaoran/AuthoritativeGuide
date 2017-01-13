@@ -21,6 +21,8 @@ import java.util.List;
  */
 public class BeatBoxFragment extends Fragment {
 
+    private static final String TAG = "BeatBoxFragment";
+
     private RecyclerView mRecyclerView;
 
     private BeatBox mBeatBox;
@@ -49,7 +51,6 @@ public class BeatBoxFragment extends Fragment {
         // 设置一个3列的布局管理器
         mRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
         mRecyclerView.setAdapter(new SoundAdapter(mBeatBox.getSounds()));
-
 
         return v;
     }
