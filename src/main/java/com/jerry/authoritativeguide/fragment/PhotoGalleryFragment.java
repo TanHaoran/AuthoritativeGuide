@@ -1,9 +1,12 @@
 package com.jerry.authoritativeguide.fragment;
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
@@ -47,6 +50,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
 
+
     public static PhotoGalleryFragment newInstance() {
 
         return new PhotoGalleryFragment();
@@ -58,7 +62,17 @@ public class PhotoGalleryFragment extends Fragment {
 
         setRetainInstance(true);
 
-        mThumbnailDownloader = new ThumbnailDownloader<>();
+        Handler handler = new Handler();
+        mThumbnailDownloader = new ThumbnailDownloader<>(handler);
+        mThumbnailDownloader.setThumbnailDownloadListener(new ThumbnailDownloader.ThumbnailDownloadListener<PhotoHolder>() {
+
+            @Override
+            public void onThumbnailDownloaded(PhotoHolder target, Bitmap bitmap) {
+                Drawable drawable = new BitmapDrawable(getResources(), bitmap);
+                target.bindGalleryItem(drawable);
+            }
+        });
+
         mThumbnailDownloader.start();
         mThumbnailDownloader.getLooper();
         Log.i(TAG, "ThumbnailDownloader has started!");
@@ -105,6 +119,12 @@ public class PhotoGalleryFragment extends Fragment {
         // 开始读取照片
         loadGalleryItems();
         return v;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        mThumbnailDownloader.clearQueue();
     }
 
     @Override
