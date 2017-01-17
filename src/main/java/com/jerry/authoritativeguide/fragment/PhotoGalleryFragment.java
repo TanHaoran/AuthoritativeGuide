@@ -11,8 +11,12 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -21,12 +25,17 @@ import android.widget.ProgressBar;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.modle.GalleryItem;
+import com.jerry.authoritativeguide.service.PollService;
 import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.util.FlickrFetchr;
+import com.jerry.authoritativeguide.util.QuerySharePreferences;
 import com.jerry.authoritativeguide.util.ThumbnailDownloader;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.jerry.authoritativeguide.util.QuerySharePreferences.getStoredQuery;
 
 /**
  * Created by Jerry on 2017/1/11.
@@ -61,6 +70,7 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         setRetainInstance(true);
+        setHasOptionsMenu(true);
 
         Handler handler = new Handler();
         mThumbnailDownloader = new ThumbnailDownloader<>(handler);
@@ -76,6 +86,8 @@ public class PhotoGalleryFragment extends Fragment {
         mThumbnailDownloader.start();
         mThumbnailDownloader.getLooper();
         Log.i(TAG, "ThumbnailDownloader has started!");
+
+        PollService.setServiceAlarm(getActivity(), true);
     }
 
     @Nullable
@@ -94,7 +106,6 @@ public class PhotoGalleryFragment extends Fragment {
                 if (mIsLoading) {
                     return;
                 }
-
                 if (!mRecyclerView.canScrollVertically(1)) {
                     Log.i(TAG, "滑动到底布啦");
                     mCurrentPage++;
@@ -103,6 +114,7 @@ public class PhotoGalleryFragment extends Fragment {
             }
 
         });
+
         mRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
@@ -119,6 +131,56 @@ public class PhotoGalleryFragment extends Fragment {
         // 开始读取照片
         loadGalleryItems();
         return v;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_photo_gallery, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_search);
+        final SearchView searchView = (SearchView) item.getActionView();
+
+        // 设置搜索关键字改变的监听器
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                QuerySharePreferences.setStoredQuery(getActivity(), query);
+                // 开始读取照片
+                loadGalleryItems();
+                //可以收起键盘
+                searchView.clearFocus();
+                //可以收起SearchView视图
+                searchView.onActionViewCollapsed();
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.i(TAG, "onQueryTextChange :" + newText);
+                return false;
+            }
+        });
+        // 设置点击监听
+        searchView.setOnSearchClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String query = QuerySharePreferences.getStoredQuery(getActivity());
+                searchView.setQuery(query, false);
+            }
+        });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_item_clear:
+                QuerySharePreferences.setStoredQuery(getActivity(), null);
+                loadGalleryItems();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     @Override
@@ -140,21 +202,39 @@ public class PhotoGalleryFragment extends Fragment {
     private void loadGalleryItems() {
         mIsLoading = true;
         Log.i(TAG, "开始读取照片，第" + mCurrentPage + "页");
-        new FetchItemsTask().execute();
+        String query = getStoredQuery(getActivity());
+        new FetchItemsTask(query).execute();
         mProgressBar.setVisibility(View.VISIBLE);
     }
 
     private class FetchItemsTask extends AsyncTask<Void, Void, List<GalleryItem>> {
 
+        private String mQuery;
+
+        public FetchItemsTask(String query) {
+            mQuery = query;
+        }
+
         @Override
         protected List<GalleryItem> doInBackground(Void... params) {
-            return new FlickrFetchr().fetchItems(mCurrentPage);
+
+            FlickrFetchr flickrFetchr = new FlickrFetchr();
+
+            if (mQuery == null) {
+                return flickrFetchr.fetchRecentPhotos(mCurrentPage);
+            } else {
+                return flickrFetchr.searchPhotos(mQuery);
+            }
         }
 
         @Override
         protected void onPostExecute(List<GalleryItem> galleryItems) {
             mIsLoading = false;
-            mGalleryItems.addAll(galleryItems);
+            if (mQuery == null) {
+                mGalleryItems.addAll(galleryItems);
+            } else {
+                mGalleryItems = galleryItems;
+            }
             setupAdapter();
         }
     }
@@ -190,16 +270,23 @@ public class PhotoGalleryFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(PhotoHolder holder, int position) {
-            GalleryItem item = mGalleryItems.get(position);
-            Drawable placeholder;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                placeholder = getResources().getDrawable(R.drawable.bill_up_close, null);
-            } else {
-                placeholder = getResources().getDrawable(R.drawable.bill_up_close);
-            }
-            holder.bindGalleryItem(placeholder);
-            mThumbnailDownloader.queueThumbnail(holder, item.getUrl_s());
-            Log.i(TAG, "Got a new url : " + item.getUrl_s());
+
+            Picasso.with(getActivity())
+                    .load(mGalleryItems.get(position).getUrl_s())
+                    .placeholder(R.drawable.bill_up_close)
+                    .into(holder.mGalleryImageView);
+
+//            GalleryItem item = mGalleryItems.get(position);
+//            Drawable placeholder;
+//            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+//                placeholder = getResources().getDrawable(R.drawable.bill_up_close, null);
+//            } else {
+//                placeholder = getResources().getDrawable(R.drawable.bill_up_close);
+//            }
+//            mThumbnailDownloader.queueThumbnail(holder, item.getUrl_s());
+//
+//            holder.bindGalleryItem(placeholder);
+//            Log.i(TAG, "Got a new url : " + item.getUrl_s());
         }
 
         @Override

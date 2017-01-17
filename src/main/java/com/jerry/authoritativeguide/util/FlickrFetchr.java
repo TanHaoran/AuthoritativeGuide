@@ -29,6 +29,17 @@ public class FlickrFetchr {
 
     private static final String API_KEY = "44cf4fb5a2f5d8d16e9524fbc8644525";
 
+    private static final String METHOD_FETCH_RECENTS = "flickr.photos.getRecent";
+    private static final String METHOD_SEARCH = "flickr.photos.search";
+
+    private static final Uri ENDPOINT = Uri
+            .parse("https://api.flickr.com/services/rest/")
+            .buildUpon()
+            .appendQueryParameter("api_key", API_KEY)
+            .appendQueryParameter("format", "json")
+            .appendQueryParameter("nojsoncallback", "1")
+            .appendQueryParameter("extras", "url_s")
+            .build();
 
     /**
      * 根据URL地址返回一个字节流数组
@@ -73,22 +84,45 @@ public class FlickrFetchr {
     }
 
     /**
+     * 获取最新的照片信息
+     *
+     * @param page
+     * @return
+     */
+    public List<GalleryItem> fetchRecentPhotos(int page) {
+        // 对分页查询参数做控制
+        page = page >= 0 ? page : 1;
+        String url = ENDPOINT
+                .buildUpon()
+                .appendQueryParameter("method", METHOD_FETCH_RECENTS)
+                .appendQueryParameter("page", String.valueOf(page))
+                .toString();
+        return downloadGalleryItems(url);
+    }
+
+    /**
+     * 获取匹配搜索结果的图片
+     *
+     * @param query
+     * @return
+     */
+    public List<GalleryItem> searchPhotos(String query) {
+        String url = ENDPOINT
+                .buildUpon()
+                .appendQueryParameter("method", METHOD_SEARCH)
+                .appendQueryParameter("text", query)
+                .toString();
+        return downloadGalleryItems(url);
+    }
+
+
+    /**
      * 获取内容
      */
-    public List<GalleryItem> fetchItems(int page) {
+    private List<GalleryItem> downloadGalleryItems(String url) {
         List<GalleryItem> galleryItems = new ArrayList<>();
 
-
         try {
-            String url = Uri.parse("https://api.flickr.com/services/rest/")
-                    .buildUpon()
-                    .appendQueryParameter("method", "flickr.photos.getRecent")
-                    .appendQueryParameter("api_key", API_KEY)
-                    .appendQueryParameter("format", "json")
-                    .appendQueryParameter("nojsoncallback", "1")
-                    .appendQueryParameter("extras", "url_s")
-                    .appendQueryParameter("page", String.valueOf(page))
-                    .build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
 
