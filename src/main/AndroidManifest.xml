@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.READ_CONTACTS"/>
     <uses-permission android:name="android.permission.CALL_PHONE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -60,6 +61,11 @@
         </activity>
 
         <service android:name=".service.PollService"/>
+
+        <service
+            android:name=".service.PollJobService"
+            android:exported="true"
+            android:permission="android.permission.BIND_JOB_SERVICE"/>
     </application>
 
 </manifest>

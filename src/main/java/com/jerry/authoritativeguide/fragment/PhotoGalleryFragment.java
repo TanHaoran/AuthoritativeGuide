@@ -5,6 +5,7 @@ import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -25,6 +26,7 @@ import android.widget.ProgressBar;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.modle.GalleryItem;
+import com.jerry.authoritativeguide.service.PollJobService;
 import com.jerry.authoritativeguide.service.PollService;
 import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.util.FlickrFetchr;
@@ -59,7 +61,6 @@ public class PhotoGalleryFragment extends Fragment {
 
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
 
-
     public static PhotoGalleryFragment newInstance() {
 
         return new PhotoGalleryFragment();
@@ -86,8 +87,6 @@ public class PhotoGalleryFragment extends Fragment {
         mThumbnailDownloader.start();
         mThumbnailDownloader.getLooper();
         Log.i(TAG, "ThumbnailDownloader has started!");
-
-        PollService.setServiceAlarm(getActivity(), true);
     }
 
     @Nullable
@@ -138,8 +137,8 @@ public class PhotoGalleryFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
 
-        MenuItem item = menu.findItem(R.id.menu_item_search);
-        final SearchView searchView = (SearchView) item.getActionView();
+        MenuItem searchItem = menu.findItem(R.id.menu_item_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
 
         // 设置搜索关键字改变的监听器
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -169,6 +168,22 @@ public class PhotoGalleryFragment extends Fragment {
                 searchView.setQuery(query, false);
             }
         });
+
+        MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
+
+        boolean isServiceAlarmOn;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            isServiceAlarmOn = PollService.isServiceAlarmOn(getActivity());
+        } else {
+            isServiceAlarmOn = PollJobService.isJoBScheduled(getActivity());
+        }
+
+        if (isServiceAlarmOn) {
+            toggleItem.setTitle(R.string.stop_polling);
+        } else {
+            toggleItem.setTitle(R.string.start_polling);
+        }
+
     }
 
     @Override
@@ -177,6 +192,16 @@ public class PhotoGalleryFragment extends Fragment {
             case R.id.menu_item_clear:
                 QuerySharePreferences.setStoredQuery(getActivity(), null);
                 loadGalleryItems();
+                return true;
+            case R.id.menu_item_toggle_polling:
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    boolean isServiceAlarmOn = !PollService.isServiceAlarmOn(getActivity());
+                    PollService.setServiceAlarm(getActivity(), isServiceAlarmOn);
+                } else {
+                    boolean isServiceAlarmOn = !PollJobService.isJoBScheduled(getActivity());
+                    PollJobService.setSchedule(getActivity(), isServiceAlarmOn);
+                }
+                getActivity().invalidateOptionsMenu();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -298,7 +323,6 @@ public class PhotoGalleryFragment extends Fragment {
             mGalleryItems = galleryItems;
         }
     }
-
 
     private void setupAdapter() {
         if (isAdded()) {
