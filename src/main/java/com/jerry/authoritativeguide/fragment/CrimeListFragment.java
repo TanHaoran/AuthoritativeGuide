@@ -1,6 +1,6 @@
 package com.jerry.authoritativeguide.fragment;
 
-import android.content.Intent;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -18,7 +18,6 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.jerry.authoritativeguide.R;
-import com.jerry.authoritativeguide.activity.CrimePagerActivity;
 import com.jerry.authoritativeguide.modle.Crime;
 import com.jerry.authoritativeguide.util.CrimeLab;
 
@@ -29,6 +28,14 @@ import java.util.ArrayList;
  */
 public class CrimeListFragment extends Fragment {
 
+    public interface CallBack {
+        /**
+         * 选中一个或者新增一个Crime时，更新列表界面
+         * @param crime
+         */
+        void onCrimeSelected(Crime crime);
+    }
+
     private static final String EXTRA_SUBTITLE = "extra_subtitle";
 
     private RecyclerView mRecyclerView;
@@ -38,6 +45,9 @@ public class CrimeListFragment extends Fragment {
     private Button mAddOneButton;
 
     private boolean mSubtitleVisible;
+
+    private CallBack mCallBack;
+
 
     @Nullable
     @Override
@@ -114,10 +124,22 @@ public class CrimeListFragment extends Fragment {
         outState.putBoolean(EXTRA_SUBTITLE, mSubtitleVisible);
     }
 
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallBack = (CallBack) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallBack = null;
+    }
+
     /**
      * 更新界面UI
      */
-    private void updateUI() {
+    public void updateUI() {
         ArrayList<Crime> crimes = CrimeLab.get(getActivity()).getCrimes();
 
         // 如果是第一次应该创建适配器，其它他情况应该更新界面
@@ -154,7 +176,6 @@ public class CrimeListFragment extends Fragment {
     }
 
 
-
     /**
      * 添加一个新陋习
      */
@@ -162,8 +183,9 @@ public class CrimeListFragment extends Fragment {
         Crime crime = new Crime();
         CrimeLab.get(getActivity()).add(crime);
 
-        Intent intent = new Intent(getActivity(), CrimePagerActivity.class);
-        startActivity(intent);
+        mCallBack.onCrimeSelected(crime);
+        // 这里要立刻刷新，因为在平板端list列表左侧不会立刻刷新
+        updateUI();
     }
 
     /**
@@ -204,8 +226,7 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-            Intent intent = CrimePagerActivity.getIntent(getActivity(), mCrime.getId());
-            startActivity(intent);
+            mCallBack.onCrimeSelected(mCrime);
         }
     }
 

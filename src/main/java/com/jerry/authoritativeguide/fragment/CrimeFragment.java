@@ -3,6 +3,7 @@ package com.jerry.authoritativeguide.fragment;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -15,12 +16,14 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -31,9 +34,11 @@ import android.widget.ImageView;
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.activity.BaseActivity;
 import com.jerry.authoritativeguide.activity.DatePickerActivity;
+import com.jerry.authoritativeguide.activity.PhotoActivity;
 import com.jerry.authoritativeguide.activity.TimePickerActivity;
 import com.jerry.authoritativeguide.modle.Crime;
 import com.jerry.authoritativeguide.permission.PermissionListener;
+import com.jerry.authoritativeguide.util.ActivityCollector;
 import com.jerry.authoritativeguide.util.CrimeLab;
 import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.util.PictureUtil;
@@ -49,16 +54,26 @@ import java.util.UUID;
 
 public class CrimeFragment extends Fragment {
 
+    public interface CallBack {
+        /**
+         * 在修改完详细界面的Crime之后，要更新列表界面
+         *
+         * @param crime
+         */
+        void onCrimeUpdate(Crime crime);
+    }
+
     private static final String TAG = "CrimeFragment";
 
     private static final String ARGS_CRIME_ID = "args_crime_id";
-    private static final String ARGS_POSITION = "args_crime_position";
 
     private static final String DIALOG_DATE = "dialog_date";
+    private static final String DIALOG_PHOTO = "dialog_photo";
 
     private static final int REQUEST_DATE = 0;
     private static final int REQUEST_CONTACT = 1;
     private static final int REQUEST_CAMERA = 2;
+    private static final int REQUEST_PHOTO = 3;
 
 
     private Crime mCrime;
@@ -77,17 +92,18 @@ public class CrimeFragment extends Fragment {
     private ImageView mPhotoImageView;
     private ImageButton mCameraButton;
 
+    private CallBack mCallBack;
+
     /**
      * 通过陋习id创建一个自己的实例
      *
      * @param crimeId
      * @return
      */
-    public static Fragment newInstance(UUID crimeId, int position) {
+    public static Fragment newInstance(UUID crimeId) {
         // 保存陋习id
         Bundle args = new Bundle();
         args.putSerializable(ARGS_CRIME_ID, crimeId);
-        args.putInt(ARGS_POSITION, position);
 
         // 创建实例
         CrimeFragment fragment = new CrimeFragment();
@@ -136,6 +152,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 mCrime.setTitle(s.toString());
+                updateCrime();
             }
 
             @Override
@@ -179,6 +196,7 @@ public class CrimeFragment extends Fragment {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mCrime.setSolved(isChecked);
+                updateCrime();
             }
         });
 
@@ -251,7 +269,27 @@ public class CrimeFragment extends Fragment {
         });
 
         // 设置图片
-        updatePhotoView();
+        ViewTreeObserver viewTreeObserver = mPhotoImageView.getViewTreeObserver();
+        viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                Log.i(TAG, "全局更新照片");
+                updatePhotoView();
+            }
+        });
+        mPhotoImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!DeviceUtil.isPad(getActivity())) {
+                    PhotoFragment photoFragment = PhotoFragment.newInstance(mPhotoFile.getPath());
+                    photoFragment.setTargetFragment(CrimeFragment.this, REQUEST_PHOTO);
+                    photoFragment.show(getFragmentManager(), DIALOG_PHOTO);
+                } else {
+                    Intent intent = PhotoActivity.getIntent(getActivity(), mPhotoFile.getPath());
+                    startActivity(intent);
+                }
+            }
+        });
 
         // 设置拍照按钮
         final Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
@@ -304,6 +342,7 @@ public class CrimeFragment extends Fragment {
             // 更新日期数据
             mCrime.setDate(date);
             updateDate();
+            updateCrime();
         } else if (requestCode == REQUEST_CONTACT) {
             // 根据返回结果获取联系人姓名和手机号
             Uri contactUri = data.getData();
@@ -313,6 +352,7 @@ public class CrimeFragment extends Fragment {
             if (suspect != null) {
                 mCrime.setSuspect(suspect);
                 mSuspectButton.setText(suspect);
+                updateCrime();
             }
 
             // 获取联系人手机号
@@ -321,12 +361,14 @@ public class CrimeFragment extends Fragment {
             if (phone != null) {
                 mCallSuspectButton.setEnabled(true);
                 mCallSuspectButton.setText(phone);
+                updateCrime();
             } else {
                 mCallSuspectButton.setEnabled(false);
                 mCallSuspectButton.setText(R.string.crime_call_suspect);
             }
         } else if (requestCode == REQUEST_CAMERA) {
             updatePhotoView();
+            updateCrime();
         }
     }
 
@@ -354,6 +396,18 @@ public class CrimeFragment extends Fragment {
         super.onPause();
         // 在屏幕失去焦点时更新数据
         CrimeLab.get(getActivity()).update(mCrime);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mCallBack = (CallBack) context;
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mCallBack = null;
     }
 
     /**
@@ -460,10 +514,15 @@ public class CrimeFragment extends Fragment {
     private void updatePhotoView() {
         if (mPhotoFile != null && mPhotoFile.exists()) {
             Bitmap bitmap = PictureUtil.getScaleBitmap(mPhotoFile
-                    .getPath(), getActivity());
+                    .getPath(), ActivityCollector.getTop());
             mPhotoImageView.setImageBitmap(bitmap);
         } else {
             mPhotoImageView.setImageBitmap(null);
         }
+    }
+
+    private void updateCrime() {
+        CrimeLab.get(getActivity()).update(mCrime);
+        mCallBack.onCrimeUpdate(mCrime);
     }
 }

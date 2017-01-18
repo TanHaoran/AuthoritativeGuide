@@ -2,6 +2,8 @@ package com.jerry.authoritativeguide.util;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.graphics.Point;
+import android.view.WindowManager;
 
 /**
  * Created by Jerry on 2017/1/4.
@@ -19,5 +21,17 @@ public class DeviceUtil {
         return (context.getResources().getConfiguration().screenLayout
                 & Configuration.SCREENLAYOUT_SIZE_MASK)
                 >= Configuration.SCREENLAYOUT_SIZE_LARGE;
+    }
+
+    /**
+     * 获取设备宽高的参数
+     * @param context
+     * @return
+     */
+    public static Point getDevicePoint(Context context) {
+        WindowManager manager = (WindowManager)context.getSystemService(Context.WINDOW_SERVICE);
+        Point point = new Point();
+        manager.getDefaultDisplay().getSize(point);
+        return point;
     }
 }
