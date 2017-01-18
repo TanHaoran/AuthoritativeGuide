@@ -38,19 +38,7 @@ public class PollJobService extends JobService {
 
     private static final int JOB_ID = 1;
 
-    private static final long POLL_INTERVAL = 60 * 1000;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        Log.i(TAG, "onCreate");
-    }
-
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand");
-        return super.onStartCommand(intent, flags, startId);
-    }
+    private static final long POLL_INTERVAL = 10 * 1000;
 
     /**
      * @param params
@@ -61,6 +49,7 @@ public class PollJobService extends JobService {
     public boolean onStartJob(JobParameters params) {
         mPollTask = new PollTask();
         mPollTask.execute(params);
+        Log.i(TAG, "execute");
         return true;
     }
 
@@ -116,9 +105,9 @@ public class PollJobService extends JobService {
         String resultId = items.get(0).getId();
 
         if (resultId.equals(lastResultId)) {
-            Log.i(TAG, "Got a old id!");
+            Log.i(TAG, "Job got a old id!");
         } else {
-            Log.i(TAG, "Got a new id!");
+            Log.i(TAG, "Job got a new id!");
             createPendingIntent();
         }
 
@@ -175,8 +164,9 @@ public class PollJobService extends JobService {
                 context.getSystemService(Context.JOB_SCHEDULER_SERVICE);
         JobInfo jobInfo = new JobInfo.Builder(
                 JOB_ID, new ComponentName(context, PollJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
-                .setPeriodic(POLL_INTERVAL)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+//                .setPeriodic(POLL_INTERVAL)
+//                .setMinimumLatency(5000)
                 .setPersisted(false)
                 .build();
         if (isOn) {
