@@ -8,7 +8,9 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
+import android.os.Build;
 import android.os.SystemClock;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.jerry.authoritativeguide.R;
@@ -56,6 +58,7 @@ public class PollService extends IntentService {
     /**
      * 后台需要检查更新的操作
      */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     private void checkUpdate() {
         if (!InternetUtil.isNetworkAvailableAndConnected(getApplicationContext())) {
             return;
@@ -109,23 +112,21 @@ public class PollService extends IntentService {
     /**
      * 创建PendingIntent
      */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     private Notification createNotification() {
         Resources resources = getResources();
         Intent intent = PhotoGalleryActivity.newIntent(getApplicationContext());
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
-            Notification notification = new Notification.Builder(this)
-                    .setTicker(resources.getString(R.string.new_pictures_title))
-                    .setSmallIcon(android.R.drawable.ic_menu_report_image)
-                    .setContentTitle(resources.getString(R.string.new_pictures_title))
-                    .setContentText(resources.getString(R.string.new_pictures_text))
-                    .setContentIntent(pi)
-                    .setAutoCancel(true)
-                    .build();
-            return notification;
-        }
-        return null;
+        Notification notification = new Notification.Builder(getApplication().getApplicationContext())
+                .setTicker(resources.getString(R.string.new_pictures_title))
+                .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                .setContentTitle(resources.getString(R.string.new_pictures_title))
+                .setContentText(resources.getString(R.string.new_pictures_text))
+                .setContentIntent(pi)
+                .setAutoCancel(true)
+                .build();
+        return notification;
     }
 
     /**
