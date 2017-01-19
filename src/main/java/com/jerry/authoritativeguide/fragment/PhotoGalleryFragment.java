@@ -1,15 +1,14 @@
 package com.jerry.authoritativeguide.fragment;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -25,8 +24,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 
 import com.jerry.authoritativeguide.R;
+import com.jerry.authoritativeguide.activity.PhotoPageActivity;
 import com.jerry.authoritativeguide.modle.GalleryItem;
-import com.jerry.authoritativeguide.service.PollJobService;
 import com.jerry.authoritativeguide.service.PollService;
 import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.util.FlickrFetchr;
@@ -43,7 +42,7 @@ import static com.jerry.authoritativeguide.util.QuerySharePreferences.getStoredQ
  * Created by Jerry on 2017/1/11.
  */
 
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragment {
 
     private static final String TAG = "PhotoGalleryFragment";
 
@@ -80,7 +79,7 @@ public class PhotoGalleryFragment extends Fragment {
             @Override
             public void onThumbnailDownloaded(PhotoHolder target, Bitmap bitmap) {
                 Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-                target.bindGalleryItem(drawable);
+                target.bindGalleryDrawable(drawable);
             }
         });
 
@@ -172,11 +171,11 @@ public class PhotoGalleryFragment extends Fragment {
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
 
         boolean isServiceAlarmOn;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            isServiceAlarmOn = PollService.isServiceAlarmOn(getActivity());
-        } else {
-            isServiceAlarmOn = PollJobService.isJoBScheduled(getActivity());
-        }
+//        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        isServiceAlarmOn = PollService.isServiceAlarmOn(getActivity());
+//        } else {
+//            isServiceAlarmOn = PollJobService.isJoBScheduled(getActivity());
+//        }
 
         if (isServiceAlarmOn) {
             toggleItem.setTitle(R.string.stop_polling);
@@ -194,13 +193,13 @@ public class PhotoGalleryFragment extends Fragment {
                 loadGalleryItems();
                 return true;
             case R.id.menu_item_toggle_polling:
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-                    boolean isServiceAlarmOn = !PollService.isServiceAlarmOn(getActivity());
-                    PollService.setServiceAlarm(getActivity(), isServiceAlarmOn);
-                } else {
-                    boolean isServiceAlarmOn = !PollJobService.isJoBScheduled(getActivity());
-                    PollJobService.setSchedule(getActivity(), isServiceAlarmOn);
-                }
+//                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                boolean isServiceAlarmOn = !PollService.isServiceAlarmOn(getActivity());
+                PollService.setServiceAlarm(getActivity(), isServiceAlarmOn);
+//                } else {
+//                    boolean isServiceAlarmOn = !PollJobService.isJoBScheduled(getActivity());
+//                    PollJobService.setSchedule(getActivity(), isServiceAlarmOn);
+//                }
                 getActivity().invalidateOptionsMenu();
                 return true;
             default:
@@ -264,17 +263,29 @@ public class PhotoGalleryFragment extends Fragment {
         }
     }
 
-    private class PhotoHolder extends RecyclerView.ViewHolder {
+    private class PhotoHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         private ImageView mGalleryImageView;
+        private GalleryItem mGalleryItem;
 
         public PhotoHolder(View itemView) {
             super(itemView);
             mGalleryImageView = (ImageView) itemView;
+            itemView.setOnClickListener(this);
         }
 
-        public void bindGalleryItem(Drawable drawable) {
+        public void bindGalleryDrawable(Drawable drawable) {
             mGalleryImageView.setImageDrawable(drawable);
+        }
+
+        public void bingGalleryItem(GalleryItem galleryItem) {
+            mGalleryItem = galleryItem;
+        }
+
+        @Override
+        public void onClick(View v) {
+            Intent intent = PhotoPageActivity.newIntent(getActivity(), mGalleryItem.getPhotoPageUri());
+            startActivity(intent);
         }
     }
 
@@ -301,6 +312,8 @@ public class PhotoGalleryFragment extends Fragment {
                     .placeholder(R.drawable.bill_up_close)
                     .into(holder.mGalleryImageView);
 
+            holder.bingGalleryItem(mGalleryItems.get(position));
+
 //            GalleryItem item = mGalleryItems.get(position);
 //            Drawable placeholder;
 //            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -310,7 +323,7 @@ public class PhotoGalleryFragment extends Fragment {
 //            }
 //            mThumbnailDownloader.queueThumbnail(holder, item.getUrl_s());
 //
-//            holder.bindGalleryItem(placeholder);
+//            holder.bindGalleryDrawable(placeholder);
 //            Log.i(TAG, "Got a new url : " + item.getUrl_s());
         }
 

@@ -1,5 +1,7 @@
 package com.jerry.authoritativeguide.modle;
 
+import android.net.Uri;
+
 /**
  * Created by Jerry on 2017/1/12.
  */
@@ -9,6 +11,7 @@ public class GalleryItem {
     private String id;
     private String title;
     private String url_s;
+    private String owner;
 
 
     public String getId() {
@@ -33,6 +36,22 @@ public class GalleryItem {
 
     public void setUrl_s(String url_s) {
         this.url_s = url_s;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public Uri getPhotoPageUri() {
+        return Uri.parse("http://www.flickr.com/photos/")
+                .buildUpon()
+                .appendPath(owner)
+                .appendPath(id)
+                .build();
     }
 
     @Override

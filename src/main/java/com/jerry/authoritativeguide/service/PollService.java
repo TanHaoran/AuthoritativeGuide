@@ -1,5 +1,6 @@
 package com.jerry.authoritativeguide.service;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.IntentService;
 import android.app.Notification;
@@ -8,7 +9,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.os.SystemClock;
-import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
 import com.jerry.authoritativeguide.R;
@@ -25,6 +25,13 @@ import java.util.List;
  */
 
 public class PollService extends IntentService {
+
+    public static final String ACTION_SHOW_NOTIFICATION = "action_show_notification";
+
+    public static final String PERMISSION_PRIVATE = "com.jerry.authoritativeguide.photogallery.Private";
+
+    public static final String REQUEST_CODE = "request_code";
+    public static final String NOTIFICATION = "notification";
 
     private static final String TAG = "PollService";
 
@@ -75,16 +82,34 @@ public class PollService extends IntentService {
             Log.i(TAG, "Got a old id!");
         } else {
             Log.i(TAG, "Got a new id!");
-            createPendingIntent();
+            // 创建Notification,是否发送要看应用是否在前台
+            Notification notification = createNotification();
+
+            showBackgroundNotification(0, notification);
         }
 
         QuerySharePreferences.setLastResultId(getApplicationContext(), resultId);
     }
 
     /**
+     * 如果应用在后台启用，那么就生成显示的Notification
+     *
+     * @param requestCode
+     * @param notification
+     */
+    private void showBackgroundNotification(int requestCode, Notification notification) {
+
+        Intent intent = new Intent(ACTION_SHOW_NOTIFICATION);
+        intent.putExtra(REQUEST_CODE, requestCode);
+        intent.putExtra(NOTIFICATION, notification);
+        sendOrderedBroadcast(intent, PERMISSION_PRIVATE, null, null, Activity.RESULT_OK,
+                null, null);
+    }
+
+    /**
      * 创建PendingIntent
      */
-    private void createPendingIntent() {
+    private Notification createNotification() {
         Resources resources = getResources();
         Intent intent = PhotoGalleryActivity.newIntent(getApplicationContext());
         PendingIntent pi = PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
@@ -98,9 +123,9 @@ public class PollService extends IntentService {
                     .setContentIntent(pi)
                     .setAutoCancel(true)
                     .build();
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
-            notificationManager.notify(0, notification);
+            return notification;
         }
+        return null;
     }
 
     /**
@@ -122,10 +147,12 @@ public class PollService extends IntentService {
             alarmManager.cancel(pi);
             pi.cancel();
         }
+        QuerySharePreferences.setAlarmOn(context, isOn);
     }
 
     /**
      * 判断定时器是否开启
+     *
      * @param context
      * @return
      */

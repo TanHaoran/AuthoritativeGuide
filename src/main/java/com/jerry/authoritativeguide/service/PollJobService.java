@@ -1,5 +1,6 @@
 package com.jerry.authoritativeguide.service;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
@@ -38,7 +39,7 @@ public class PollJobService extends JobService {
 
     private static final int JOB_ID = 1;
 
-    private static final long POLL_INTERVAL = 10 * 1000;
+    private static final long POLL_INTERVAL = AlarmManager.INTERVAL_FIFTEEN_MINUTES;
 
     /**
      * @param params
@@ -165,7 +166,7 @@ public class PollJobService extends JobService {
         JobInfo jobInfo = new JobInfo.Builder(
                 JOB_ID, new ComponentName(context, PollJobService.class))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-//                .setPeriodic(POLL_INTERVAL)
+                .setPeriodic(POLL_INTERVAL)
 //                .setMinimumLatency(5000)
                 .setPersisted(false)
                 .build();
