@@ -68,6 +68,9 @@
             android:name=".activity.PhotoPageActivity"
             android:configChanges="keyboardHidden|orientation|screenSize">
         </activity>
+        <activity android:name=".activity.DragAndDrawActivity">
+
+        </activity>
 
         <service android:name=".service.PollService"/>
 
