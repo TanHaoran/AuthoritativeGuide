@@ -71,6 +71,7 @@
         <activity android:name=".activity.DragAndDrawActivity">
 
         </activity>
+        <activity android:name=".activity.SunsetActivity"></activity>
 
         <service android:name=".service.PollService"/>
 
