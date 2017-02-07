@@ -14,7 +14,7 @@ public class AuthoritativeGuideActivity extends BaseActivity {
     private ListView mListView;
 
     private String[] mTitles = {"GeoQuiz", "CrimeIntent", "BeatBox", "NerdLauncher", "PhotoGallery",
-    "DragAndDraw", "Sunset"};
+    "DragAndDraw", "Sunset", "MaterialDesign"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +50,11 @@ public class AuthoritativeGuideActivity extends BaseActivity {
                         break;
                     case 6:
                         intent.setClass(AuthoritativeGuideActivity.this, SunsetActivity.class);
+                        break;
+                    case 7:
+                        intent.setClass(AuthoritativeGuideActivity.this, MaterialDesignActivity.class);
                     default:
+
                         break;
                 }
                 startActivity(intent);

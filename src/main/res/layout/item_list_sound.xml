@@ -7,6 +7,7 @@
     android:layout_margin="8dp">
 
     <Button
+        android:background="@drawable/button_beat_box_round"
         android:layout_gravity="center"
         android:id="@+id/btn_sound"
         android:layout_width="match_parent"

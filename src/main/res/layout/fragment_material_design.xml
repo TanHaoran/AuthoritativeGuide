@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="#ff00ff"
+        android:elevation="1dp"
+        android:text="1dp elevation"/>
+
+
+    <TextView
+        android:id="@+id/tv_10elevation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="#00ffff"
+        android:text="10dp elevation"/>
+
+    <Button
+        android:id="@+id/tv_elevation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:background="#00ff00"
+        android:stateListAnimator="@animator/button_material_design"
+        android:text="10dp elevation"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/multiple_frame_button"
+        android:text="multiple_frame"/>
+
+    <RelativeLayout
+        android:id="@+id/rl_reveal"
+        android:layout_width="200dp"
+        android:layout_height="70dp">
+
+        <View
+            android:id="@+id/v_reveal_pressed"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#ec6948"/>
+
+    </RelativeLayout>
+
+
+</LinearLayout>

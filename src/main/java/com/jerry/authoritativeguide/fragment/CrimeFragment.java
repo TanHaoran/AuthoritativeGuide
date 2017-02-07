@@ -9,11 +9,14 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityOptionsCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewCompat;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -109,6 +112,23 @@ public class CrimeFragment extends Fragment {
         CrimeFragment fragment = new CrimeFragment();
         fragment.setArguments(args);
         return fragment;
+    }
+
+    /**
+     * 以动画的方式过度
+     *
+     * @param activity
+     * @param intent
+     * @param sourceView
+     */
+    public static void startWithTransition(Activity activity, Intent intent, View sourceView) {
+        ViewCompat.setTransitionName(sourceView, "image");
+
+        ActivityOptionsCompat options = ActivityOptionsCompat
+                .makeSceneTransitionAnimation(activity, sourceView, "image");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            activity.startActivity(intent, options.toBundle());
+        }
     }
 
     @Override
@@ -286,7 +306,7 @@ public class CrimeFragment extends Fragment {
                     photoFragment.show(getFragmentManager(), DIALOG_PHOTO);
                 } else {
                     Intent intent = PhotoActivity.getIntent(getActivity(), mPhotoFile.getPath());
-                    startActivity(intent);
+                    startWithTransition(getActivity(), intent, mPhotoImageView);
                 }
             }
         });
