@@ -25,7 +25,7 @@ import android.widget.ProgressBar;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.activity.PhotoPageActivity;
-import com.jerry.authoritativeguide.modle.GalleryItem;
+import com.jerry.authoritativeguide.model.GalleryItem;
 import com.jerry.authoritativeguide.service.PollService;
 import com.jerry.authoritativeguide.util.DeviceUtil;
 import com.jerry.authoritativeguide.util.FlickrFetchr;

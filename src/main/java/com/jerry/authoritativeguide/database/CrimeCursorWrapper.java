@@ -3,7 +3,7 @@ package com.jerry.authoritativeguide.database;
 import android.database.Cursor;
 import android.database.CursorWrapper;
 
-import com.jerry.authoritativeguide.modle.Crime;
+import com.jerry.authoritativeguide.model.Crime;
 
 import java.util.Date;
 import java.util.UUID;

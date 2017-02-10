@@ -9,7 +9,7 @@ import android.media.SoundPool;
 import android.os.Build;
 import android.util.Log;
 
-import com.jerry.authoritativeguide.modle.Sound;
+import com.jerry.authoritativeguide.model.Sound;
 
 import java.io.IOException;
 import java.util.ArrayList;

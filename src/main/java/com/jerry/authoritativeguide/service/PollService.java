@@ -15,7 +15,7 @@ import android.util.Log;
 
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.activity.PhotoGalleryActivity;
-import com.jerry.authoritativeguide.modle.GalleryItem;
+import com.jerry.authoritativeguide.model.GalleryItem;
 import com.jerry.authoritativeguide.util.FlickrFetchr;
 import com.jerry.authoritativeguide.util.InternetUtil;
 import com.jerry.authoritativeguide.util.QuerySharePreferences;

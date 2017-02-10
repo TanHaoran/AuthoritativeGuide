@@ -1,4 +1,4 @@
-package com.jerry.authoritativeguide.modle;
+package com.jerry.authoritativeguide.model;
 
 /**
  * Created by Jerry on 2016/12/29.

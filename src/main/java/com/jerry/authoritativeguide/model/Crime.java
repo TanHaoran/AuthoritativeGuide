@@ -1,4 +1,4 @@
-package com.jerry.authoritativeguide.modle;
+package com.jerry.authoritativeguide.model;
 
 import com.jerry.authoritativeguide.util.DateUtil;
 

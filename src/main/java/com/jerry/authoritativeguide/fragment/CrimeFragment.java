@@ -39,7 +39,7 @@ import com.jerry.authoritativeguide.activity.BaseActivity;
 import com.jerry.authoritativeguide.activity.DatePickerActivity;
 import com.jerry.authoritativeguide.activity.PhotoActivity;
 import com.jerry.authoritativeguide.activity.TimePickerActivity;
-import com.jerry.authoritativeguide.modle.Crime;
+import com.jerry.authoritativeguide.model.Crime;
 import com.jerry.authoritativeguide.permission.PermissionListener;
 import com.jerry.authoritativeguide.util.ActivityCollector;
 import com.jerry.authoritativeguide.util.CrimeLab;

@@ -1,8 +1,6 @@
-package com.jerry.authoritativeguide.modle;
+package com.jerry.authoritativeguide.model;
 
 import android.graphics.PointF;
-import android.os.Parcel;
-import android.os.Parcelable;
 
 /**
  * Created by Jerry on 2017/2/4.

@@ -18,7 +18,7 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.jerry.authoritativeguide.R;
-import com.jerry.authoritativeguide.modle.Crime;
+import com.jerry.authoritativeguide.model.Crime;
 import com.jerry.authoritativeguide.util.CrimeLab;
 
 import java.util.ArrayList;

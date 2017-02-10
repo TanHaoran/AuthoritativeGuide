@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.jerry.authoritativeguide.modle.GalleryItem;
+import com.jerry.authoritativeguide.model.GalleryItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;

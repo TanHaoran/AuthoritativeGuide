@@ -9,7 +9,7 @@ import android.os.Environment;
 import com.jerry.authoritativeguide.database.CrimeBaseHelper;
 import com.jerry.authoritativeguide.database.CrimeCursorWrapper;
 import com.jerry.authoritativeguide.database.CrimeDbSchema;
-import com.jerry.authoritativeguide.modle.Crime;
+import com.jerry.authoritativeguide.model.Crime;
 
 import java.io.File;
 import java.util.ArrayList;

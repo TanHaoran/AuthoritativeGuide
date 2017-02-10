@@ -11,7 +11,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import com.jerry.authoritativeguide.R;
-import com.jerry.authoritativeguide.modle.Sound;
+import com.jerry.authoritativeguide.model.Sound;
 import com.jerry.authoritativeguide.util.BeatBox;
 
 import java.util.List;

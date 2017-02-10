@@ -1,4 +1,4 @@
-package com.jerry.authoritativeguide.modle;
+package com.jerry.authoritativeguide.model;
 
 import android.net.Uri;
 

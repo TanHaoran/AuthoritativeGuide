@@ -7,7 +7,7 @@ import android.support.v4.app.FragmentManager;
 import com.jerry.authoritativeguide.R;
 import com.jerry.authoritativeguide.fragment.CrimeFragment;
 import com.jerry.authoritativeguide.fragment.CrimeListFragment;
-import com.jerry.authoritativeguide.modle.Crime;
+import com.jerry.authoritativeguide.model.Crime;
 
 /**
  * Created by Jerry on 2017/1/3.
